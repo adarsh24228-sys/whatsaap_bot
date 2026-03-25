@@ -71,7 +71,10 @@ async function getContacts() {
     message: `Namaste ${c.name},
 
 This is from SimplifiedMinds.
-Please fill this form https://forms.gle/djeVC2Y1BxizATGX9 so that we can give you access to view your chapter wise test result marks.
+Please fill this form https://forms.gle/djeVC2Y1BxizATGX9 so that we can give you access to view your chapter wise test result marks, preferably gmail account id if you have.
+
+Parents gmail id only.
+If there is no parents gmail id please contact us on 8867008008
 
 Thank you`
   }));
