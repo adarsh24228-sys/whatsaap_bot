@@ -66,8 +66,8 @@ async function getContacts() {
     .filter(r => r.number);
 
   return contacts.map(c => ({
-    ...c,
-    message: `Namaste ${c.name},     // MESSAGE SECTION
+    ...c,                                              // MESSAGE SECTION
+    message: `Namaste ${c.name},     
 
 This is from SimplifiedMinds.
 Please fill this form https://forms.gle/djeVC2Y1BxizATGX9 so that we can give you access to view your chapter wise test result marks, preferably gmail account id if you have.
