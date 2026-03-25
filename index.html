@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>WhatsApp Sender</title>
+
+<style>
+body {
+  font-family: system-ui;
+  background: #f4f6f8;
+  padding: 20px;
+  max-width: 800px;
+  margin: auto;
+}
+
+h1 { text-align: center; }
+
+.card {
+  background: white;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 10px;
+}
+
+textarea {
+  width: 100%;
+  height: 150px;
+  margin-top: 10px;
+}
+
+button {
+  margin-top: 10px;
+  padding: 10px;
+  width: 100%;
+  background: #25d366;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.topbar {
+  margin-bottom: 15px;
+  display: flex;
+  gap: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>📨 WhatsApp Sender</h1>
+
+<div class="topbar">
+  <select id="filter" onchange="loadContacts()">
+    <option value="all">All (unsent only)</option>
+    <option value="sent">Sent</option>
+    <option value="unsent">Unsent</option>
+  </select>
+
+  <button onclick="resetAll()">Reset</button>
+</div>
+
+<div id="container"></div>
+
+<script>
+const API = "/api/contacts";
+
+/* ================= STATUS STORAGE ================= */
+
+function getStatus(row) {
+  return localStorage.getItem("sent-" + row) || "unsent";
+}
+
+function setStatus(row, status) {
+  localStorage.setItem("sent-" + row, status);
+}
+
+function resetAll() {
+  localStorage.clear();
+  loadContacts();
+}
+
+/* ================= LOAD CONTACTS ================= */
+
+async function loadContacts() {
+  const container = document.getElementById("container");
+  const filter = document.getElementById("filter").value;
+
+  container.innerHTML = "Loading...";
+
+  const res = await fetch(API);
+  const data = await res.json();
+
+  container.innerHTML = "";
+
+  data.contacts.forEach(c => {
+    const status = getStatus(c.rowNumber);
+
+    // 🔥 Hide sent in "All"
+    if (filter === "all" && status === "sent") return;
+
+    // Apply filters
+    if (filter === "sent" && status !== "sent") return;
+    if (filter === "unsent" && status === "sent") return;
+
+    const div = document.createElement("div");
+    div.className = "card";
+
+    div.innerHTML = `
+      <b>${c.name}</b>
+      <br>📞 ${c.number}
+
+      <textarea id="msg-${c.rowNumber}">${c.message}</textarea>
+
+      <button onclick="sendWhatsApp('${c.number}', ${c.rowNumber})">
+        Send WhatsApp
+      </button>
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+/* ================= SEND FUNCTION ================= */
+
+function sendWhatsApp(phone, row) {
+  const msg = document.getElementById(`msg-${row}`).value;
+  const cleanPhone = phone.replace(/\D/g, "");
+
+  const url = `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(msg)}`;
+
+  // mark as sent
+  setStatus(row, "sent");
+
+  // auto hide immediately
+  document.getElementById("filter").value = "unsent";
+  loadContacts();
+
+  window.open(url, "_blank");
+}
+
+/* ================= INIT ================= */
+
+window.onload = loadContacts;
+</script>
+
+</body>
+</html>
