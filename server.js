@@ -11,22 +11,22 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-/* ================= SERVE FRONTEND ================= */
 
-// serve static files
+
+
 app.use(express.static(__dirname));
 
-// explicitly serve index.html
+
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-/* ================= GOOGLE SHEET CONFIG ================= */
 
-const SPREADSHEET_ID = "1WUbHjjt30otS1N2KAcBn_xspv-e2pAgEl9GlJ5SKs9k";
-const SHEET_NAME = "Sheet1";
 
-/* ================= GOOGLE AUTH ================= */
+const SPREADSHEET_ID = "1WUbHjjt30otS1N2KAcBn_xspv-e2pAgEl9GlJ5SKs9k";   // CHANGE THIS 
+const SHEET_NAME = "Sheet1";              // MAKE SURE THE NAME OF SHEET IS SAME AS HERE 
+
+
 
 if (!process.env.GOOGLE_CREDENTIALS) {
   console.error("❌ GOOGLE_CREDENTIALS not set");
@@ -42,7 +42,6 @@ try {
   console.error("❌ Failed to parse GOOGLE_CREDENTIALS", err);
 }
 
-/* ================= FETCH CONTACTS ================= */
 
 async function getContacts() {
   const sheets = google.sheets({
@@ -68,7 +67,7 @@ async function getContacts() {
 
   return contacts.map(c => ({
     ...c,
-    message: `Namaste ${c.name},
+    message: `Namaste ${c.name},     // MESSAGE SECTION
 
 This is from SimplifiedMinds.
 Please fill this form https://forms.gle/djeVC2Y1BxizATGX9 so that we can give you access to view your chapter wise test result marks, preferably gmail account id if you have.
@@ -80,7 +79,7 @@ Thank you`
   }));
 }
 
-/* ================= TEST API ================= */
+
 
 app.get("/test", async (req, res) => {
   try {
@@ -103,7 +102,6 @@ app.get("/test", async (req, res) => {
   }
 });
 
-/* ================= MAIN API ================= */
 
 app.get("/api/contacts", async (req, res) => {
   try {
@@ -115,7 +113,7 @@ app.get("/api/contacts", async (req, res) => {
   }
 });
 
-/* ================= START SERVER ================= */
+
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
