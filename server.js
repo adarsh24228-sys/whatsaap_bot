@@ -11,22 +11,39 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-// Serve frontend
+/* ================= SERVE FRONTEND ================= */
+
+// serve static files
 app.use(express.static(__dirname));
 
+// explicitly serve index.html
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
+
 /* ================= GOOGLE SHEET CONFIG ================= */
+
 const SPREADSHEET_ID = "1WUbHjjt30otS1N2KAcBn_xspv-e2pAgEl9GlJ5SKs9k";
 const SHEET_NAME = "Sheet1";
 
 /* ================= GOOGLE AUTH ================= */
 
-console.log("Credentials path:", path.join(__dirname, "credentials.json"));
-const auth = new google.auth.GoogleAuth({
-  keyFile: path.join(__dirname, "credentials.json"),
-  scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"]
-});
+if (!process.env.GOOGLE_CREDENTIALS) {
+  console.error("❌ GOOGLE_CREDENTIALS not set");
+}
+
+let auth;
+try {
+  auth = new google.auth.GoogleAuth({
+    credentials: JSON.parse(process.env.GOOGLE_CREDENTIALS),
+    scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"]
+  });
+} catch (err) {
+  console.error("❌ Failed to parse GOOGLE_CREDENTIALS", err);
+}
 
 /* ================= FETCH CONTACTS ================= */
+
 async function getContacts() {
   const sheets = google.sheets({
     version: "v4",
@@ -54,16 +71,14 @@ async function getContacts() {
     message: `Namaste ${c.name},
 
 This is from SimplifiedMinds.
-Please fill this form https://forms.gle/djeVC2Y1BxizATGX9 so that we can give you access to view your chapter wise test result marks, preferably gmail account id if you have.
-
-Parents gmail id only.
-If there is no parents gmail id please contact us on 8867008008
+Please fill this form https://forms.gle/djeVC2Y1BxizATGX9 so that we can give you access to view your chapter wise test result marks.
 
 Thank you`
   }));
 }
 
 /* ================= TEST API ================= */
+
 app.get("/test", async (req, res) => {
   try {
     const sheets = google.sheets({
@@ -80,24 +95,25 @@ app.get("/test", async (req, res) => {
       title: response.data.properties.title
     });
   } catch (err) {
-    console.error(err);
+    console.error("❌ TEST ERROR:", err.message);
     res.json({ error: err.message });
   }
 });
 
 /* ================= MAIN API ================= */
+
 app.get("/api/contacts", async (req, res) => {
   try {
     const contacts = await getContacts();
     res.json({ contacts });
   } catch (err) {
+    console.error("❌ CONTACT ERROR:", err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
 /* ================= START SERVER ================= */
-app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
-});
 
-setInterval(() => {}, 1000);
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
