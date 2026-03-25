@@ -65,7 +65,7 @@ button {
 <script>
 const API = "/api/contacts";
 
-/* ================= STATUS ================= */
+
 
 function getStatus(row) {
   return localStorage.getItem("sent-" + row) || "unsent";
@@ -80,7 +80,7 @@ function resetAll() {
   loadContacts();
 }
 
-/* ================= LOAD ================= */
+
 
 async function loadContacts() {
   const container = document.getElementById("container");
@@ -132,7 +132,7 @@ async function loadContacts() {
   }
 }
 
-/* ================= SEND ================= */
+
 
 function sendWhatsApp(phone, row) {
   const msg = document.getElementById(`msg-${row}`).value;
