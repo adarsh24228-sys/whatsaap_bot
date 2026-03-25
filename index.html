@@ -60,12 +60,12 @@ button {
   <button onclick="resetAll()">Reset</button>
 </div>
 
-<div id="container"></div>
+<div id="container">Loading...</div>
 
 <script>
 const API = "/api/contacts";
 
-/* ================= STATUS STORAGE ================= */
+/* ================= STATUS ================= */
 
 function getStatus(row) {
   return localStorage.getItem("sent-" + row) || "unsent";
@@ -80,7 +80,7 @@ function resetAll() {
   loadContacts();
 }
 
-/* ================= LOAD CONTACTS ================= */
+/* ================= LOAD ================= */
 
 async function loadContacts() {
   const container = document.getElementById("container");
@@ -88,40 +88,51 @@ async function loadContacts() {
 
   container.innerHTML = "Loading...";
 
-  const res = await fetch(API);
-  const data = await res.json();
+  try {
+    const res = await fetch(API);
 
-  container.innerHTML = "";
+    if (!res.ok) throw new Error("API failed");
 
-  data.contacts.forEach(c => {
-    const status = getStatus(c.rowNumber);
+    const data = await res.json();
 
-    // 🔥 Hide sent in "All"
-    if (filter === "all" && status === "sent") return;
+    if (!data.contacts) {
+      container.innerHTML = "❌ No data received";
+      return;
+    }
 
-    // Apply filters
-    if (filter === "sent" && status !== "sent") return;
-    if (filter === "unsent" && status === "sent") return;
+    container.innerHTML = "";
 
-    const div = document.createElement("div");
-    div.className = "card";
+    data.contacts.forEach(c => {
+      const status = getStatus(c.rowNumber);
 
-    div.innerHTML = `
-      <b>${c.name}</b>
-      <br>📞 ${c.number}
+      if (filter === "all" && status === "sent") return;
+      if (filter === "sent" && status !== "sent") return;
+      if (filter === "unsent" && status === "sent") return;
 
-      <textarea id="msg-${c.rowNumber}">${c.message}</textarea>
+      const div = document.createElement("div");
+      div.className = "card";
 
-      <button onclick="sendWhatsApp('${c.number}', ${c.rowNumber})">
-        Send WhatsApp
-      </button>
-    `;
+      div.innerHTML = `
+        <b>${c.name}</b><br>
+        📞 ${c.number}
 
-    container.appendChild(div);
-  });
+        <textarea id="msg-${c.rowNumber}">${c.message}</textarea>
+
+        <button onclick="sendWhatsApp('${c.number}', ${c.rowNumber})">
+          Send WhatsApp
+        </button>
+      `;
+
+      container.appendChild(div);
+    });
+
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = "❌ Failed to load contacts<br>Check /api/contacts";
+  }
 }
 
-/* ================= SEND FUNCTION ================= */
+/* ================= SEND ================= */
 
 function sendWhatsApp(phone, row) {
   const msg = document.getElementById(`msg-${row}`).value;
@@ -129,17 +140,13 @@ function sendWhatsApp(phone, row) {
 
   const url = `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(msg)}`;
 
-  // mark as sent
   setStatus(row, "sent");
 
-  // auto hide immediately
   document.getElementById("filter").value = "unsent";
   loadContacts();
 
   window.open(url, "_blank");
 }
-
-/* ================= INIT ================= */
 
 window.onload = loadContacts;
 </script>
